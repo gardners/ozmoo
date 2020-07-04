@@ -449,6 +449,31 @@ deletable_init_start
 	lda #$80
 	sta charset_switchable
 
+	;; MEGA65 IO enable
+	lda #$47
+	sta $d02f
+	lda #$53
+	sta $d02f
+	;; 40MHz CPU
+	lda #65
+	sta 0
+	;; 80-column mode
+	lda #$c0
+	sta $d031
+	lda #$c9
+	sta $D016
+	;; Screen stays at $0400
+	lda #$00
+	sta $d060
+	sta $d062
+	sta $d063
+	lda #$04
+	sta $d061
+	;; Disable VIC-II/VIC-III hot registers
+	lda $d05d
+	and #$7f
+	sta $d05d
+	
 	jmp init_screen_colours ; _invisible
 
 
