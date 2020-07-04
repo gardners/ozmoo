@@ -344,8 +344,9 @@ s_erase_window
     adc #>($D800 - SCREEN_ADDRESS)
     sta zp_colourline + 1
     ldy #SCREEN_WIDTH-1
---  lda (zp_screenline),y ; zp_screenrow
+--
     jsr colour2k
+    lda (zp_screenline),y ; zp_screenrow
     sta (zp_colourline),y ; zp_screenrow - 1
     dey
     bpl --
@@ -438,7 +439,8 @@ toggle_darkmode
 	ldy fgcol,x
 	lda zcolours,y
 	jsr s_set_text_colour
-	ldx #4
+	jsr colour2k
+	ldx #8
 	ldy #$d8
 	sty z_temp + 11
 	ldy #0
@@ -467,6 +469,7 @@ toggle_darkmode
 	inc z_temp + 11
 	dex
 	bne .compare
+	jsr colour1k
 	rts 
 
 
