@@ -183,4 +183,5 @@ header_standard_revision_number = $32
 header_alphabet_table = $34
 header_header_extension_table = $36
 
-
+SCREEN_HEIGHT = 25
+SCREEN_WIDTH = 80

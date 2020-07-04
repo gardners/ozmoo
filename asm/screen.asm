@@ -162,7 +162,7 @@ z_ins_print_table
 	ldy .pt_width
 -	jsr read_next_byte
 	ldx .current_col
-	cpx #40
+	cpx #SCREEN_WIDTH
 	bcs +
 	jsr streams_print_output
 +	inc .current_col
@@ -382,10 +382,10 @@ increase_num_rows
 show_more_prompt
 	; time to show [More]
 	jsr clear_num_rows
-	lda $07e7 
+	lda $0400 + (SCREEN_WIDTH*SCREEN_HEIGHT-1) 
 	sta .more_text_char
 	lda #128 + $2a ; screen code for reversed "*"
-	sta $07e7
+	sta $0400 + (SCREEN_WIDTH*SCREEN_HEIGHT-1) 
 	; wait for ENTER
 .printchar_pressanykey
 !ifndef BENCHMARK {
@@ -395,8 +395,10 @@ show_more_prompt
 	and #1
 	beq +
 	ldx $d021
-+	stx $d800 + 999	
-	ldx #40
+	jsr colour2k
++	stx $d800 + (SCREEN_WIDTH*SCREEN_HEIGHT-1)
+	jsr colour1k
+	ldx #SCREEN_WIDTH
 ---	lda $a2
 -	cmp $a2
 	beq -
@@ -409,7 +411,7 @@ show_more_prompt
 +
 }
 	lda .more_text_char
-	sta $07e7
+	sta $0400 + (SCREEN_WIDTH*SCREEN_HEIGHT -1)
 .increase_num_rows_done
     rts
 
@@ -468,7 +470,7 @@ printchar_buffered
     jmp .printchar_done
 .check_break_char
     ldy buffer_index
-	cpy #40
+	cpy #SCREEN_WIDTH
 	bcs .add_char ; Don't register break chars on last position of buffer.
     cmp #$20 ; Space
     beq .break_char
@@ -482,11 +484,11 @@ printchar_buffered
     sta print_buffer,y
 	iny
     sty buffer_index
-    cpy #41
+    cpy #SCREEN_WIDTH+1
     bne .printchar_done
     ; print the line until last space
 	; First calculate max# of characters on line
-	ldx #40
+	ldx #SCREEN_WIDTH
 	lda window_start_row
 	sec
 	sbc window_start_row + 1
@@ -498,21 +500,21 @@ printchar_buffered
 	; Check if we have a "perfect space" - a space after 40 characters
 	lda print_buffer,x
 	cmp #$20
-	beq .print_40_2 ; Print all in buffer, regardless of which column buffering started in
+	beq .print_line_2 ; Print all in buffer, regardless of which column buffering started in
 	; Now find the character to break on
 	ldy last_break_char_buffer_pos
-	beq .print_40 ; If there are no break characters on the line, print all 40 characters
+	beq .print_line ; If there are no break characters on the line, print all 40 characters
 	; Check if the break character is a space
 	lda print_buffer,y
 	cmp #$20
 	beq .print_buffer
 	iny
 	bne .store_break_pos ; Always branch
-.print_40
+.print_line
 	; If we can't find a place to break, and buffered output started in column > 0, print a line break and move the text in the buffer to the next line.
 	ldx first_buffered_column
 	bne .move_remaining_chars_to_buffer_start
-.print_40_2	
+.print_line_2	
 	ldy max_chars_on_line
 .store_break_pos
 	sty last_break_char_buffer_pos
@@ -553,7 +555,7 @@ printchar_buffered
     ; more on the same line
     jsr increase_num_rows
 	lda last_break_char_buffer_pos
-	cmp #40
+	cmp #SCREEN_WIDTH
 	bcs +
     lda #$0d
     jsr s_printchar
@@ -658,7 +660,7 @@ draw_status_line
     ; fill the rest of the line with spaces
     ;
 -   lda zp_screencolumn
-	cmp #40
+	cmp #SCREEN_WIDTH
 	bcs +
     lda #$20
     jsr s_printchar

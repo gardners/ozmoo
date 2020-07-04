@@ -21,6 +21,18 @@
 
 !zone screenkernal {
 
+colour2k
+	sei
+	lda #$01
+	sta $d030
+	rts
+
+colour1k
+	lda #$00
+	sta $d030
+	cli
+	rts
+	
 s_init
     ; init cursor
     lda #$ff
@@ -36,7 +48,7 @@ s_init
     rts
 
 s_plot
-    ; y=column (0-39)
+    ; y=column (0-79)
     ; x=row (0-24)
     bcc .set_cursor_pos
     ; get_cursor
@@ -86,14 +98,16 @@ s_printchar
 	cmp window_start_row + 1,y
 	bcc ++
 	dec zp_screenrow
-	lda #39
+	lda #SCREEN_WIDTH-1
 	sta zp_screencolumn
 ++  jsr .update_screenpos
     lda #$20
     ldy zp_screencolumn
     sta (zp_screenline),y
+    jsr colour2k
     lda s_colour
     sta (zp_colourline),y
+    jsr colour1k
     jmp .printchar_end
 +   cmp #$93 
     bne +
@@ -133,8 +147,8 @@ s_printchar
 	; Negative column. Increase column but don't print anything.
 	inc zp_screencolumn
 	jmp .printchar_end
-+	; Skip if column > 39
-	cpx #40
++	; Skip if column > 79
+	cpx #SCREEN_WIDTH
 	bcs .printchar_end
 	; Reset ignore next linebreak setting
 	ldx current_window
@@ -172,13 +186,15 @@ s_printchar
     pla
     ldy zp_screencolumn
     sta (zp_screenline),y
+    jsr colour2k
     lda s_colour
     sta (zp_colourline),y
+    jsr colour1k
     iny
     sty zp_screencolumn
 	ldx current_window
 	bne .printchar_end ; For upper window and statusline (in z3), don't advance to next line.
-    cpy #40
+    cpy #SCREEN_WIDTH
     bcc .printchar_end
 	dec s_ignore_next_linebreak,x ; Goes from 0 to $ff
     lda #0
@@ -249,27 +265,29 @@ s_erase_window
     beq +
     ; need to recalculate zp_screenline
     stx s_current_screenpos_row
-    ; use the fact that zp_screenrow * 40 = zp_screenrow * (32+8)
-    lda #0
-    sta zp_screenline + 1
-	txa
-    asl; *2 no need to rol zp_screenline + 1 since 0 < zp_screenrow < 24
-    asl; *4
-    asl; *8
-    sta zp_colourline ; store *8 for later
-    asl; *16
-    rol zp_screenline + 1
-    asl; *32
-    rol zp_screenline + 1  ; *32
-    clc
-    adc zp_colourline ; add *8
-    sta zp_screenline
-    sta zp_colourline
-    lda zp_screenline + 1
-    adc #$04 ; add screen start ($0400)
-    sta zp_screenline +1
-    adc #$d4 ; add colour start ($d800)
-    sta zp_colourline + 1
+
+	;; Use MEGA65's hardware multiplier
+	stx $d770
+	lda #0
+	sta $d771
+	sta $d772
+	sta $d773
+	sta $d775
+	sta $d776
+	sta $d777
+	lda #80
+	sta $d774
+
+	lda $d778
+	sta zp_screenline
+	sta zp_colourline
+	lda $d779
+	clc
+	adc #$04
+	sta zp_screenline+1
+	clc
+	adc #$d4
+	sta zp_colourline+1
 +   rts
 
 .s_scroll
@@ -291,11 +309,13 @@ s_erase_window
     pla
     sta zp_colourline
     ; move characters
-    ldy #39
+    jsr colour2k
+    ldy #SCREEN_WIDTH-1
 --  lda (zp_screenline),y ; zp_screenrow
     sta (zp_colourline),y ; zp_screenrow - 1
     dey
     bpl --
+    jsr colour1k
     ; move colour info
     lda zp_screenline + 1
     pha
@@ -306,11 +326,13 @@ s_erase_window
     clc
     adc #$d4
     sta zp_colourline + 1
-    ldy #39
+    jsr colour2k
+    ldy #SCREEN_WIDTH-1
 --  lda (zp_screenline),y ; zp_screenrow
     sta (zp_colourline),y ; zp_screenrow - 1
     dey
     bpl --
+    jsr colour1k
     pla
     sta zp_screenline + 1
     lda zp_screenrow
@@ -326,7 +348,7 @@ s_erase_line
 	ldy #0
 .erase_line_from_any_col	
 	lda #$20
--	cpy #40
+-	cpy #SCREEN_WIDTH
 	bcs .done_erasing
 	sta (zp_screenline),y
 	iny
@@ -390,7 +412,7 @@ toggle_darkmode
 ; Set statusline colour
 	ldy statuslinecol,x
 	lda zcolours,y
-	ldy #39
+	ldy #SCREEN_WIDTH-1
 -	sta $d800,y
 	dey
 	bpl -
@@ -405,7 +427,7 @@ toggle_darkmode
 	ldy #0
 	sty z_temp + 10
 !ifdef Z3 {
-	ldy #40
+	ldy #SCREEN_WIDTH
 }
 !ifdef Z5PLUS {
 	sta z_temp + 7
