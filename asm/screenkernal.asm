@@ -440,8 +440,9 @@ toggle_darkmode
 	lda zcolours,y
 	jsr s_set_text_colour
 	jsr colour2k
-	ldx #8
-	ldy #$d8
+	;; Work out how many pages of colour RAM to examine
+	ldx #1+>(SCREEN_WIDTH*SCREEN_HEIGHT)
+	ldy #>$D800
 	sty z_temp + 11
 	ldy #0
 	sty z_temp + 10
