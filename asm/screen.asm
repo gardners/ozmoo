@@ -382,10 +382,10 @@ increase_num_rows
 show_more_prompt
 	; time to show [More]
 	jsr clear_num_rows
-	lda $0400 + (SCREEN_WIDTH*SCREEN_HEIGHT-1) 
+	lda SCREEN_ADDRESS + (SCREEN_WIDTH*SCREEN_HEIGHT-1) 
 	sta .more_text_char
 	lda #128 + $2a ; screen code for reversed "*"
-	sta $0400 + (SCREEN_WIDTH*SCREEN_HEIGHT-1) 
+	sta SCREEN_ADDRESS + (SCREEN_WIDTH*SCREEN_HEIGHT-1) 
 	; wait for ENTER
 .printchar_pressanykey
 !ifndef BENCHMARK {
@@ -411,7 +411,7 @@ show_more_prompt
 +
 }
 	lda .more_text_char
-	sta $0400 + (SCREEN_WIDTH*SCREEN_HEIGHT -1)
+	sta SCREEN_ADDRESS + (SCREEN_WIDTH*SCREEN_HEIGHT -1)
 .increase_num_rows_done
     rts
 

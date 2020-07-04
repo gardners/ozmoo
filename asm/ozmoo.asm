@@ -459,13 +459,9 @@ deletable_init_start
 	sta $d031
 	lda #$c9
 	sta $D016
-	;; Screen stays at $0400
-	lda #$00
-	sta $d060
-	sta $d062
-	sta $d063
-	lda #$04
-	sta $d061
+	;; Screen at $0800
+	lda #$26
+	sta $d018
 	;; Disable VIC-II/VIC-III hot registers
 	lda $d05d
 	and #$7f

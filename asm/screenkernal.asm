@@ -298,10 +298,10 @@ s_erase_window
     lda $d779
     and #$07
     clc
-    adc #$04
+    adc #>SCREEN_ADDRESS
     sta zp_screenline+1
     clc
-    adc #$d4
+    adc #>($D800 - SCREEN_ADDRESS)
     sta zp_colourline+1
 +   rts
 

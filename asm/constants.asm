@@ -185,3 +185,4 @@ header_header_extension_table = $36
 
 SCREEN_HEIGHT = 25
 SCREEN_WIDTH = 80
+SCREEN_ADDRESS = $0800
