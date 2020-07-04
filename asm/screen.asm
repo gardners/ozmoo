@@ -681,7 +681,7 @@ draw_status_line
 	lda z_operand_value_high_arr + 1
 	pha
     ldx #0
-    ldy #25
+    ldy #SCREEN_WIDTH - 15
     jsr set_cursor
     ldy #0
 -   lda .score_str,y
