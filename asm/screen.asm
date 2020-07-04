@@ -395,8 +395,8 @@ show_more_prompt
 	and #1
 	beq +
 	ldx $d021
-	jsr colour2k
-+	stx $d800 + (SCREEN_WIDTH*SCREEN_HEIGHT-1)
++	jsr colour2k
+	stx $d800 + (SCREEN_WIDTH*SCREEN_HEIGHT-1)
 	jsr colour1k
 	ldx #SCREEN_WIDTH
 ---	lda $a2
