@@ -450,10 +450,7 @@ deletable_init_start
 	sta charset_switchable
 
 	;; MEGA65 IO enable
-	lda #$47
-	sta $d02f
-	lda #$53
-	sta $d02f
+	jsr mega65io
 	;; 40MHz CPU
 	lda #65
 	sta 0

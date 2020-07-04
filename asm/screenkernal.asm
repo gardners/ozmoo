@@ -21,15 +21,28 @@
 
 !zone screenkernal {
 
+mega65io
+	lda #$47
+	sta $d02f
+	lda #$53
+	sta $d02f
+	rts
+	
 colour2k
 	sei
+	pha
+        jsr mega65io
 	lda #$01
 	sta $d030
+	pla
 	rts
 
 colour1k
+	pha
+        jsr mega65io
 	lda #$00
 	sta $d030
+	pla
 	cli
 	rts
 	
@@ -56,9 +69,9 @@ s_plot
     ldy zp_screencolumn
     rts
 .set_cursor_pos
-+	cpx #25
++	cpx #SCREEN_HEIGHT
 	bcc +
-	ldx #24
+	ldx #SCREEN_HEIGHT-1
 +	stx zp_screenrow
 	sty zp_screencolumn
 	jmp .update_screenpos
@@ -201,7 +214,7 @@ s_printchar
     sta zp_screencolumn
     inc zp_screenrow
 	lda zp_screenrow
-	cmp #25
+	cmp #SCREEN_HEIGHT
 	bcs +
 	jsr .update_screenpos
 	jmp .printchar_end
@@ -251,7 +264,7 @@ s_erase_window
 -   jsr s_erase_line
     inc zp_screenrow
     lda zp_screenrow
-    cmp #25
+    cmp #SCREEN_HEIGHT
     bne -
     lda #0
     sta zp_screenrow
@@ -266,33 +279,36 @@ s_erase_window
     ; need to recalculate zp_screenline
     stx s_current_screenpos_row
 
-	;; Use MEGA65's hardware multiplier
-	stx $d770
-	lda #0
-	sta $d771
-	sta $d772
-	sta $d773
-	sta $d775
-	sta $d776
-	sta $d777
-	lda #80
-	sta $d774
+    ;; Use MEGA65's hardware multiplier
+    jsr mega65io
+    stx $d770
+    lda #0
+    sta $d771
+    sta $d772
+    sta $d773
+    sta $d775
+    sta $d776
+    sta $d777
+    lda #SCREEN_WIDTH
+    sta $d774
 
-	lda $d778
-	sta zp_screenline
-	sta zp_colourline
-	lda $d779
-	clc
-	adc #$04
-	sta zp_screenline+1
-	clc
-	adc #$d4
-	sta zp_colourline+1
+    lda $d778
+    sta zp_screenline
+    sta zp_colourline
+    lda $d779
+    and #$07
+    clc
+    adc #$04
+    sta zp_screenline+1
+    clc
+    adc #$d4
+    sta zp_colourline+1
 +   rts
 
 .s_scroll
+	
     lda zp_screenrow
-    cmp #25
+    cmp #SCREEN_HEIGHT
     bpl +
     rts
 +   ldx window_start_row + 1 ; how many top lines to protect
