@@ -1,4 +1,6 @@
-# Ozmoo
+# Ozmoo MEGA65 Port
+
+80-column text mode and fast CPU by Paul Gardner-Stephen (paul@m-e-g-a.org)
 
 *Ozmoo (spell): survive unnatural death*
 

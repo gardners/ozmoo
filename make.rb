@@ -76,11 +76,14 @@ $SRCDIR = File.join(__dir__, 'asm')
 $TEMPDIR = File.join(__dir__, 'temp')
 Dir.mkdir($TEMPDIR) unless Dir.exist?($TEMPDIR)
 
+$wrapper_labels_file = File.join($TEMPDIR, 'wrapper_labels.txt')
+$wrapper_file = File.join($TEMPDIR, 'wrapper')
 $labels_file = File.join($TEMPDIR, 'acme_labels.txt')
 $ozmoo_file = File.join($TEMPDIR, 'ozmoo')
 $zip_file = File.join($TEMPDIR, 'ozmoo_zip')
 $good_zip_file = File.join($TEMPDIR, 'ozmoo_zip_good')
 $compmem_filename = File.join($TEMPDIR, 'compmem.tmp')
+$universal_file = File.join($TEMPDIR, 'universal')
 
 class Disk_image
 	def base_initialize
@@ -604,6 +607,11 @@ def build_interpreter()
 	fontflag = $font_filename ? ' -DCUSTOM_FONT=1' : ''
     compressionflags = ''
 
+    cmd = "#{$ACME} --setpc 0x2001 --cpu m65 --format cbm -l \"#{$wrapper_labels_file}\" --outfile \"#{$wrapper_file}\" c65toc64wrapper.asm"
+       puts cmd
+    ret = system(cmd)
+    exit 0 unless ret
+    
     cmd = "#{$ACME}#{necessarysettings}#{optionalsettings}#{fontflag}#{colourflags}#{generalflags}" +
 		"#{debugflags}#{compressionflags} -l \"#{$labels_file}\" --outfile \"#{$ozmoo_file}\" ozmoo.asm"
 	puts cmd
@@ -705,9 +713,14 @@ def build_boot_file(vmem_preload_blocks, vmem_contents, free_blocks)
 end
 
 def add_boot_file(finaldiskname, diskimage_filename)
+        # Put C65/C64 mode switch wrapper on the front
+        cmd = "cat #{$wrapper_file} #{$good_zip_file} > #{$universal_file}";
+        puts cmd
+        ret = system(cmd)
+        exit 0 unless ret
 	ret = FileUtils.cp("#{diskimage_filename}", "#{finaldiskname}")
-	puts "#{$C1541} -attach \"#{finaldiskname}\" -write \"#{$good_zip_file}\" story"
-	system("#{$C1541} -attach \"#{finaldiskname}\" -write \"#{$good_zip_file}\" story")
+	puts "#{$C1541} -attach \"#{finaldiskname}\" -write \"#{$universal_file}\" autoboot.c65"
+	system("#{$C1541} -attach \"#{finaldiskname}\" -write \"#{$universal_file}\" autoboot.c65")
 end
 
 def play(filename)
