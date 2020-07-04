@@ -306,7 +306,7 @@ s_erase_window
 +   rts
 
 .s_scroll
-	
+
     lda zp_screenrow
     cmp #SCREEN_HEIGHT
     bpl +
@@ -325,9 +325,10 @@ s_erase_window
     pla
     sta zp_colourline
     ; move characters
-    jsr colour2k
     ldy #SCREEN_WIDTH-1
---  lda (zp_screenline),y ; zp_screenrow
+--
+    jsr colour2k	
+    lda (zp_screenline),y ; zp_screenrow
     sta (zp_colourline),y ; zp_screenrow - 1
     dey
     bpl --
@@ -336,15 +337,15 @@ s_erase_window
     lda zp_screenline + 1
     pha
     clc
-    adc #$d4
+    adc #>($D800 - SCREEN_ADDRESS)
     sta zp_screenline + 1
     lda zp_colourline + 1
     clc
-    adc #$d4
+    adc #>($D800 - SCREEN_ADDRESS)
     sta zp_colourline + 1
-    jsr colour2k
     ldy #SCREEN_WIDTH-1
 --  lda (zp_screenline),y ; zp_screenrow
+    jsr colour2k
     sta (zp_colourline),y ; zp_screenrow - 1
     dey
     bpl --
