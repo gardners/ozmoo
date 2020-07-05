@@ -134,7 +134,8 @@ reg_backgroundcolour  = $d021
 ; --- Kernel routines ---
 kernal_delay_1ms      = $eeb3 ; delay 1 ms
 kernal_setcursor      = $e50c ; set cursor to x/y (row/column)
-kernal_reset          = $fce2 ; cold reset of the C64
+;; 	kernal_reset          = $fce2 ; cold reset of the C64
+kernal_reset = 58552	      ; Reset back to C65 mode
 kernal_scnkey         = $ff9f ; scan the keyboard
 kernal_setlfs         = $ffba ; set file parameters
 kernal_setnam         = $ffbd ; set file name
